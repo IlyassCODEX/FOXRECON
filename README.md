@@ -15,17 +15,14 @@ Fox Recon is an intelligent web reconnaissance tool designed for security resear
 
 
 Install dependencies:
-bash
 
-pip install -r requirements.txt
+     pip install -r requirements.txt
 
 Run the application:
-bash
 
-python app.py
+    python3 app.py
 
 Open your browser to:
-text
 
     http://localhost:5000
 
@@ -70,27 +67,6 @@ Fox Recon provides these API endpoints:
     GET /api/results/<scan_id> - Get JSON results
 
     GET /export/<scan_id> - Export results (PDF/JSON)
-
-Screenshots
-
-https://screenshots/scan-page.png
-Scan initiation interface
-
-https://screenshots/results-page.png
-Interactive results dashboard
-Contributing
-
-Contributions are welcome! Please follow these steps:
-
-    Fork the repository
-
-    Create your feature branch (git checkout -b feature/AmazingFeature)
-
-    Commit your changes (git commit -m 'Add some AmazingFeature')
-
-    Push to the branch (git push origin feature/AmazingFeature)
-
-    Open a Pull Request
 
 
 Disclaimer
