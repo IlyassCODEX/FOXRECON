@@ -1,1 +1,191 @@
+{% extends "base.html" %}
 
+{% block title %}Scan Results - {{ results.domain }} | Fox Recon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-5">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold">
+                        <i class="bi bi-bug fox-icon"></i> Scan Results: {{ results.domain }}
+                    </h2>
+                    <p class="text-muted">Scan ID: {{ scan_id }} | {{ results.timestamp }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/export/{{ scan_id }}?format=pdf" class="btn btn-outline-danger">
+                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </a>
+                    <a href="/export/{{ scan_id }}?format=json" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-code"></i> JSON
+                    </a>
+                    <a href="/" class="btn btn-primary">
+                        <i class="bi bi-search"></i> New Scan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if results.ai_analysis %}
+    <div class="row mb-4 g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-data fox-icon"></i> Summary</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Subdomains
+                            <span class="badge rounded-pill" style="background-color: var(--primary-color); color: white;">{{ results.ai_analysis.summary.total_subdomains }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Active Subdomains
+                            <span class="badge rounded-pill" style="background-color: var(--primary-color); color: white;">{{ results.ai_analysis.summary.active_subdomains }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            HTTPS Enabled
+                            <span class="badge rounded-pill" style="background-color: var(--primary-color); color: white;">{{ results.ai_analysis.summary.https_enabled }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-exclamation fox-icon"></i> Risk Assessment</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <span class="badge rounded-pill py-2 px-3" style="font-size: 1.2rem; background-color: {% if results.ai_analysis.risk_assessment.level|lower == 'high' %} #dc3545 {% elif results.ai_analysis.risk_assessment.level|lower == 'medium' %}#ffc107{% else %}#28a745{% endif %}; color: {% if results.ai_analysis.risk_assessment.level|lower == 'medium' %}black{% else %}white{% endif %}">
+                            {{ results.ai_analysis.risk_assessment.level }} ({{ results.ai_analysis.risk_assessment.score }}/100)
+                        </span>
+                    </div>
+                    <ul class="list-group list-group-flush mt-3">
+                        {% for factor in results.ai_analysis.risk_assessment.factors[:3] %}
+                        <li class="list-group-item">{{ factor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb fox-icon"></i> Top Insights</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for insight in results.ai_analysis.insights[:3] %}
+                        <div class="list-group-item">
+                            <i class="bi bi-chevron-right" style="color: var(--primary-color);"></i> {{ insight }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-list-ul fox-icon"></i> Subdomains ({{ results.subdomains|length }})</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subdomain</th>
+                                    <th>IP</th>
+                                    <th>HTTP</th>
+                                    <th>HTTPS</th>
+                                    <th>Title</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subdomain in results.subdomains %}
+                                <tr>
+                                    <td>
+                                        {% if subdomain.http_status or subdomain.https_status %}
+                                            <a href="{% if subdomain.https_status %}https://{% else %}http://{% endif %}{{ subdomain.subdomain }}" target="_blank">
+                                                {{ subdomain.subdomain }}
+                                            </a>
+                                        {% else %}
+                                            {{ subdomain.subdomain }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ subdomain.ip }}</td>
+                                    <td class="http-status-{{ subdomain.http_status|default('other', true)|string|slice(0,1) }}xx">
+                                        {{ subdomain.http_status|default('-') }}
+                                    </td>
+                                    <td class="http-status-{{ subdomain.https_status|default('other', true)|string|slice(0,1) }}xx">
+                                        {{ subdomain.https_status|default('-') }}
+                                    </td>
+                                    <td>{{ subdomain.title|default('')|truncate(30) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            {% if results.ai_analysis %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle fox-icon"></i> High-Value Targets</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for target in results.ai_analysis.high_value_targets[:5] %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ target.subdomain }}</h6>
+                                <span class="badge rounded-pill" style="background-color: {% if target.security_score > 60 %}#dc3545{% elif target.security_score > 30 %}#ffc107{% else %}#004e89{% endif %}; color: {% if target.security_score > 30 and target.security_score <= 60 %}black{% else %}white{% endif %}">
+                                    {{ target.security_score }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ target.reasons|join(', ')|truncate(40) }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle fox-icon"></i> Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for rec in results.ai_analysis.recommendations[:3] %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <strong>{{ rec.category }}</strong>
+                                <span class="badge rounded-pill" style="background-color: {% if rec.priority|lower == 'high' %}#dc3545{% elif rec.priority|lower == 'medium' %}#ffc107{% else %}#28a745{% endif %}; color: {% if rec.priority|lower == 'medium' %}black{% else %}white{% endif %}">
+                                    {{ rec.priority }}
+                                </span>
+                            </div>
+                            <p class="mb-1">{{ rec.action }}</p>
+                            <small>Tools: {{ rec.tools|join(', ') }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
